@@ -1,0 +1,6 @@
+@FaceDllService_HostAddress = http://localhost:5110
+
+GET {{FaceDllService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

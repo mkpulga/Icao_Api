@@ -1,0 +1,35 @@
+# Allow-list: only the folders and files named below are tracked. Everything else in
+# this directory (deployment packages, publish output, old test packages, samples) stays
+# local. Add a line here deliberately when something new should go into the repository.
+/*
+!/.gitignore
+!/README.md
+!/IcaoAPi.sln
+!/Dockerfile
+!/obsICao/
+!/obsDLL_v3/
+!/FaceDllService/
+!/tests/
+
+# Build output and IDE state
+bin/
+obj/
+.vs/
+*.user
+
+# License files are issued per machine (hardware ID) and must never be published.
+*.lic
+
+# Innovatrics SDK binaries are proprietary: copy them in locally (see README.md).
+/obsICao/dlls/Innovatrics.*.dll
+/obsICao/dlls/ISegLib.NET.dll
+/obsICao/dlls/iseglib.dll
+/obsICao/iseglib.dll
+/obsDLL_v3/iseglib.dll
+
+# Face and fingerprint images are biometric data.
+*.jpg
+*.jpeg
+*.bmp
+*.png
+*.wsq
