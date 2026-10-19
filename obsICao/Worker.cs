@@ -9,14 +9,16 @@ namespace obsIcaoApi
         private static string licensePath = Path.Combine(AppContext.BaseDirectory, "onejkit.lic");
         private IHost? _webApiHost;
         private readonly ILogger<Worker> _logger;
+        private readonly IConfiguration _configuration;
 
         ISegLib? finger;
-        private static IcaoFace icao = new IcaoFace();
+        private FacePhotoVerifier? _faceVerifier;
         private static FingerPrint fingerPrint = new FingerPrint();
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,6 +54,27 @@ namespace obsIcaoApi
                               _logger.LogError("License check failed: {Message} Face: {FaceError} Finger: {FingerError}",
                                   license.Message, license.Face.Error, license.Finger.Error);
 
+                          // How many verifyPhoto requests may run face detection at once. Each one
+                          // holds a FaceHandler (~74 MB) and one CPU core for ~0.15-0.25 s; later
+                          // requests wait their turn. Set VerifyPhoto:MaxConcurrency in
+                          // appsettings.json or the VerifyPhoto__MaxConcurrency environment variable.
+                          int faceConcurrency = _configuration.GetValue("VerifyPhoto:MaxConcurrency",
+                              Math.Min(4, Environment.ProcessorCount));
+                          _faceVerifier = new FacePhotoVerifier(faceConcurrency);
+                          if (license.Face.Valid)
+                          {
+                              try
+                              {
+                                  _faceVerifier.WarmUp();
+                                  _logger.LogInformation("verifyPhoto: {Count} face handlers ready", _faceVerifier.MaxConcurrency);
+                              }
+                              catch (Exception ex)
+                              {
+                                  // Not fatal: handlers are created on first use instead.
+                                  _logger.LogError(ex, "verifyPhoto: could not create face handlers at startup");
+                              }
+                          }
+
                           app.UseCors();
                           app.UseRouting();
                           app.UseEndpoints(endpoint =>
@@ -79,13 +102,18 @@ namespace obsIcaoApi
                                       Parameters parameters = new Parameters();
                                       using var bitmap = new System.Drawing.Bitmap(memoryStream);
 
-                                      IcaoFace.ICAOclass result = icao.verifyIcao(bitmap, licensePath, parameters);
+                                      IcaoFace.ICAOclass result = await _faceVerifier!.VerifyAsync(bitmap, parameters, request.HttpContext.RequestAborted);
+                                      // The response serializes the image's properties after this
+                                      // handler returns, so it is released when the request ends.
+                                      request.HttpContext.Response.RegisterForDispose(result.image);
 
-                                      using var outputSteam = new MemoryStream();
+                                      // The BMP buffer is sized up front, and its bytes are serialized
+                                      // as Base64 directly. The JSON is the same as before, without a
+                                      // ~3 MB copy and an ~8 MB string per request, which kept the
+                                      // garbage collector busy under load.
+                                      using var outputSteam = new MemoryStream(EstimateBmpSize(result.image));
                                       result.image.Save(outputSteam,System.Drawing.Imaging.ImageFormat.Bmp);
-                                      var imageBytes = outputSteam.ToArray();
-
-                                      var base64 = Convert.ToBase64String(imageBytes);
+                                      var base64 = new ReadOnlyMemory<byte>(outputSteam.GetBuffer(), 0, (int)outputSteam.Length);
 
                                       return Results.Ok(new { result,base64});
                                   }
@@ -192,7 +220,17 @@ namespace obsIcaoApi
                 await _webApiHost.StopAsync(cancellationToken);
                 _webApiHost?.Dispose();
             }
+            _faceVerifier?.Dispose();
             await base.StopAsync(cancellationToken);
+        }
+
+        // Size of the BMP the image will be saved as: header, room for a palette, and padded
+        // rows. A low guess is still correct, the stream just grows.
+        private static int EstimateBmpSize(System.Drawing.Image image)
+        {
+            int bitsPerPixel = System.Drawing.Image.GetPixelFormatSize(image.PixelFormat);
+            long stride = ((long)image.Width * bitsPerPixel + 31) / 32 * 4;
+            return (int)Math.Min(int.MaxValue, 54 + 1024 + stride * image.Height);
         }
     }
 }

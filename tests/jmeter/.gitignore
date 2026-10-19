@@ -1,0 +1,4 @@
+# Test runs (results, dashboards, logs) and environment-specific settings.
+results/
+config/server.properties
+config/*.local.properties

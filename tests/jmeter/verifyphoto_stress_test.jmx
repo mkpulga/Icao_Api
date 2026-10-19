@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+<hashTree>
+<TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="verifyPhoto stress test (obsIcaoApi)">
+<stringProp name="TestPlan.comments">POST multipart face images to obsIcaoApi /verifyPhoto on an open-model schedule: linear ramp to TARGET_TPS, then sustained load. Run non-GUI with scripts\run-verifyphoto-test.ps1. See README.md.</stringProp>
+<boolProp name="TestPlan.functional_mode">false</boolProp>
+<boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+<boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+<elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+<collectionProp name="Arguments.arguments"/>
+</elementProp>
+</TestPlan>
+<hashTree>
+<Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Configuration (override with -q file.properties or -JNAME=value)">
+<stringProp name="TestPlan.comments">Every value is ${__P(NAME,default)}. Do not edit here: put environment-specific values in a properties file (see config\).</stringProp>
+<collectionProp name="Arguments.arguments">
+<elementProp name="PROTOCOL" elementType="Argument">
+<stringProp name="Argument.name">PROTOCOL</stringProp>
+<stringProp name="Argument.value">${__P(PROTOCOL,http)}</stringProp>
+<stringProp name="Argument.desc">http or https</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="API_HOST" elementType="Argument">
+<stringProp name="Argument.name">API_HOST</stringProp>
+<stringProp name="Argument.value">${__P(API_HOST,localhost)}</stringProp>
+<stringProp name="Argument.desc">API host as seen from the JMeter machine</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="API_PORT" elementType="Argument">
+<stringProp name="Argument.name">API_PORT</stringProp>
+<stringProp name="Argument.value">${__P(API_PORT,7006)}</stringProp>
+<stringProp name="Argument.desc">Worker.cs listens on 0.0.0.0:7006</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="API_PATH" elementType="Argument">
+<stringProp name="Argument.name">API_PATH</stringProp>
+<stringProp name="Argument.value">${__P(API_PATH,/verifyPhoto)}</stringProp>
+<stringProp name="Argument.desc">POST, multipart/form-data, no authentication</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="LICENSE_CHECK_PATH" elementType="Argument">
+<stringProp name="Argument.name">LICENSE_CHECK_PATH</stringProp>
+<stringProp name="Argument.value">${__P(LICENSE_CHECK_PATH,/checkLicense)}</stringProp>
+<stringProp name="Argument.desc">GET; the preflight requires face.valid = true</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="UPLOAD_FIELD_NAME" elementType="Argument">
+<stringProp name="Argument.name">UPLOAD_FIELD_NAME</stringProp>
+<stringProp name="Argument.value">${__P(UPLOAD_FIELD_NAME,file)}</stringProp>
+<stringProp name="Argument.desc">Multipart field of the image. The API takes the first file whatever its name</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="IMAGE_PATH" elementType="Argument">
+<stringProp name="Argument.name">IMAGE_PATH</stringProp>
+<stringProp name="Argument.value">${__P(IMAGE_PATH,../../deploy/samples/face.jpg)}</stringProp>
+<stringProp name="Argument.desc">Face image on the JMeter machine; relative paths start at this .jmx folder. Use forward slashes</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="IMAGE_MIME_TYPE" elementType="Argument">
+<stringProp name="Argument.name">IMAGE_MIME_TYPE</stringProp>
+<stringProp name="Argument.value">${__P(IMAGE_MIME_TYPE,image/jpeg)}</stringProp>
+<stringProp name="Argument.desc">Content-Type of the file part</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="EXPECTED_MESSAGE" elementType="Argument">
+<stringProp name="Argument.name">EXPECTED_MESSAGE</stringProp>
+<stringProp name="Argument.value">${__P(EXPECTED_MESSAGE,)}</stringProp>
+<stringProp name="Argument.desc">Required verdict: verified or unverified. Empty = the verdict of the baseline request</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="STRICT_BODY_MATCH" elementType="Argument">
+<stringProp name="Argument.name">STRICT_BODY_MATCH</stringProp>
+<stringProp name="Argument.value">${__P(STRICT_BODY_MATCH,true)}</stringProp>
+<stringProp name="Argument.desc">true = every body must be byte-identical (MD5) to the baseline response; the same image always gives the same response</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="TARGET_TPS" elementType="Argument">
+<stringProp name="Argument.name">TARGET_TPS</stringProp>
+<stringProp name="Argument.value">${__P(TARGET_TPS,10)}</stringProp>
+<stringProp name="Argument.desc">Requests per second offered during the sustained phase</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="RAMP_START_TPS" elementType="Argument">
+<stringProp name="Argument.name">RAMP_START_TPS</stringProp>
+<stringProp name="Argument.value">${__P(RAMP_START_TPS,1)}</stringProp>
+<stringProp name="Argument.desc">Rate at the start of the linear ramp</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="RAMP_UP_SECONDS" elementType="Argument">
+<stringProp name="Argument.name">RAMP_UP_SECONDS</stringProp>
+<stringProp name="Argument.value">${__P(RAMP_UP_SECONDS,120)}</stringProp>
+<stringProp name="Argument.desc">Length of the linear ramp from RAMP_START_TPS to TARGET_TPS. 0 = start at TARGET_TPS</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="SUSTAIN_SECONDS" elementType="Argument">
+<stringProp name="Argument.name">SUSTAIN_SECONDS</stringProp>
+<stringProp name="Argument.value">${__P(SUSTAIN_SECONDS,780)}</stringProp>
+<stringProp name="Argument.desc">Seconds at TARGET_TPS after the ramp (120 + 780 = 15 minutes)</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="MAX_IN_FLIGHT" elementType="Argument">
+<stringProp name="Argument.name">MAX_IN_FLIGHT</stringProp>
+<stringProp name="Argument.value">${__P(MAX_IN_FLIGHT,40)}</stringProp>
+<stringProp name="Argument.desc">Load threads = most requests in flight. Keeps the rate while response time stays under MAX_IN_FLIGHT / TARGET_TPS seconds</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="HARD_MAX_SECONDS" elementType="Argument">
+<stringProp name="Argument.name">HARD_MAX_SECONDS</stringProp>
+<stringProp name="Argument.value">${__P(HARD_MAX_SECONDS,1200)}</stringProp>
+<stringProp name="Argument.desc">Absolute limit on the load phase, whatever else happens</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="CONNECT_TIMEOUT_MS" elementType="Argument">
+<stringProp name="Argument.name">CONNECT_TIMEOUT_MS</stringProp>
+<stringProp name="Argument.value">${__P(CONNECT_TIMEOUT_MS,5000)}</stringProp>
+<stringProp name="Argument.desc">TCP connect timeout</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="RESPONSE_TIMEOUT_MS" elementType="Argument">
+<stringProp name="Argument.name">RESPONSE_TIMEOUT_MS</stringProp>
+<stringProp name="Argument.value">${__P(RESPONSE_TIMEOUT_MS,30000)}</stringProp>
+<stringProp name="Argument.desc">A response not complete by then fails as TIMEOUT</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="ERROR_RATE_PERCENT" elementType="Argument">
+<stringProp name="Argument.name">ERROR_RATE_PERCENT</stringProp>
+<stringProp name="Argument.value">${__P(ERROR_RATE_PERCENT,5)}</stringProp>
+<stringProp name="Argument.desc">Safety stop: more than this % of the last ERROR_WINDOW requests failed</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="ERROR_WINDOW" elementType="Argument">
+<stringProp name="Argument.name">ERROR_WINDOW</stringProp>
+<stringProp name="Argument.value">${__P(ERROR_WINDOW,100)}</stringProp>
+<stringProp name="Argument.desc">Rolling window, in requests, for the error-rate and timeout stops (100 = 10 s at 10 TPS)</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="ERROR_MIN_SAMPLES" elementType="Argument">
+<stringProp name="Argument.name">ERROR_MIN_SAMPLES</stringProp>
+<stringProp name="Argument.value">${__P(ERROR_MIN_SAMPLES,30)}</stringProp>
+<stringProp name="Argument.desc">Completed requests needed before the error-rate stop can trigger</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="MAX_CONSECUTIVE_FAILURES" elementType="Argument">
+<stringProp name="Argument.name">MAX_CONSECUTIVE_FAILURES</stringProp>
+<stringProp name="Argument.value">${__P(MAX_CONSECUTIVE_FAILURES,5)}</stringProp>
+<stringProp name="Argument.desc">Safety stop: this many failed requests in a row</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="MAX_TIMEOUTS_IN_WINDOW" elementType="Argument">
+<stringProp name="Argument.name">MAX_TIMEOUTS_IN_WINDOW</stringProp>
+<stringProp name="Argument.value">${__P(MAX_TIMEOUTS_IN_WINDOW,3)}</stringProp>
+<stringProp name="Argument.desc">Safety stop: this many timeouts within the last ERROR_WINDOW requests</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="SLOW_RESPONSE_MS" elementType="Argument">
+<stringProp name="Argument.name">SLOW_RESPONSE_MS</stringProp>
+<stringProp name="Argument.value">${__P(SLOW_RESPONSE_MS,10000)}</stringProp>
+<stringProp name="Argument.desc">A response slower than this counts toward MAX_CONSECUTIVE_SLOW</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="MAX_CONSECUTIVE_SLOW" elementType="Argument">
+<stringProp name="Argument.name">MAX_CONSECUTIVE_SLOW</stringProp>
+<stringProp name="Argument.value">${__P(MAX_CONSECUTIVE_SLOW,5)}</stringProp>
+<stringProp name="Argument.desc">Safety stop: this many slow responses in a row</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="MAX_SCHEDULE_LAG_MS" elementType="Argument">
+<stringProp name="Argument.name">MAX_SCHEDULE_LAG_MS</stringProp>
+<stringProp name="Argument.value">${__P(MAX_SCHEDULE_LAG_MS,5000)}</stringProp>
+<stringProp name="Argument.desc">Safety stop: a request goes out this late because every load thread is still waiting on the API</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="MAX_BAD_VERDICTS" elementType="Argument">
+<stringProp name="Argument.name">MAX_BAD_VERDICTS</stringProp>
+<stringProp name="Argument.value">${__P(MAX_BAD_VERDICTS,3)}</stringProp>
+<stringProp name="Argument.desc">Safety stop: this many invalid or inconsistent verification results in the run</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="STOP_FILE" elementType="Argument">
+<stringProp name="Argument.name">STOP_FILE</stringProp>
+<stringProp name="Argument.value">${__P(STOP_FILE,)}</stringProp>
+<stringProp name="Argument.desc">When this file appears the test stops gracefully. Written by monitor-resources.ps1 and stop-test.ps1</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+<elementProp name="RESULTS_DIR" elementType="Argument">
+<stringProp name="Argument.name">RESULTS_DIR</stringProp>
+<stringProp name="Argument.value">${__P(RESULTS_DIR,)}</stringProp>
+<stringProp name="Argument.desc">Run folder; tearDown writes run-info.properties and stop-reason.txt here</stringProp>
+<stringProp name="Argument.metadata">=</stringProp>
+</elementProp>
+</collectionProp>
+</Arguments>
+<hashTree>
+</hashTree>
+<ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults (target and timeouts)">
+<elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+<collectionProp name="Arguments.arguments"/>
+</elementProp>
+<stringProp name="HTTPSampler.domain">${API_HOST}</stringProp>
+<stringProp name="HTTPSampler.port">${API_PORT}</stringProp>
+<stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+<stringProp name="HTTPSampler.connect_timeout">${CONNECT_TIMEOUT_MS}</stringProp>
+<stringProp name="HTTPSampler.response_timeout">${RESPONSE_TIMEOUT_MS}</stringProp>
+<stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+</ConfigTestElement>
+<hashTree>
+</hashTree>
+<HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
+<stringProp name="TestPlan.comments">The API has no authentication (Worker.cs maps the endpoints with no auth middleware). Content-Type and the multipart boundary come from the sampler.</stringProp>
+<collectionProp name="HeaderManager.headers">
+<elementProp name="" elementType="Header">
+<stringProp name="Header.name">Accept</stringProp>
+<stringProp name="Header.value">application/json</stringProp>
+</elementProp>
+<elementProp name="" elementType="Header">
+<stringProp name="Header.name">User-Agent</stringProp>
+<stringProp name="Header.value">JMeter-verifyphoto-stress-test</stringProp>
+</elementProp>
+</collectionProp>
+</HeaderManager>
+<hashTree>
+</hashTree>
+<JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Successful verification check (every verifyPhoto sampler)">
+<stringProp name="TestPlan.comments">At plan level so the baseline and load requests share one definition of success.</stringProp>
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Decides whether a verifyPhoto response is a successful verification. HTTP 200 alone is not
+// enough: the API also answers 200 when the check itself failed, with the error text in
+// result.message. A success needs all of:
+//   - HTTP 200
+//   - result.message is a verdict: verified or unverified
+//   - a complete base64 image field
+//   - the expected verdict (EXPECTED_MESSAGE, or else the baseline request's verdict)
+//   - with STRICT_BODY_MATCH=true, a body identical (MD5) to the baseline response
+// The failure class (FAIL_CLASS) and the verdict (VERDICT) are saved with each sample.
+import java.security.MessageDigest
+
+String label = prev.getSampleLabel()
+if (!label.startsWith('verifyPhoto')) return
+boolean baseline = label == 'verifyPhoto_baseline'
+byte[] body = prev.getResponseData()
+if (body == null) body = new byte[0]
+String code = prev.getResponseCode() ?: ''
+String failClass = null
+String detail = ''
+String verdict = ''
+
+if (!code.isInteger()) {
+    String text = (prev.getResponseMessage() ?: '') + ' ' + new String(body, 0, Math.min(body.length, 300), 'UTF-8')
+    failClass = (text =~ /(?i)timed out|timeout/) ? 'TIMEOUT' : 'CONNECTION_ERROR'
+    detail = code + ' ' + text.trim()
+} else if (code != '200') {
+    failClass = 'HTTP_' + code
+    detail = new String(body, 0, Math.min(body.length, 300), 'UTF-8')
+} else {
+    String head = new String(body, 0, Math.min(body.length, 4096), 'UTF-8')
+    String tail = new String(body, Math.max(0, body.length - 2), Math.min(2, body.length), 'UTF-8')
+    def match = head =~ /"message":"((?:[^"\\]|\\.)*)"/
+    if (!match.find()) {
+        failClass = 'INVALID_RESPONSE'
+        detail = 'no result.message: ' + head.take(200)
+    } else {
+        verdict = match.group(1)
+        if (!(verdict in ['verified', 'unverified'])) {
+            failClass = 'INVALID_VERDICT'
+            detail = verdict
+        } else if (!head.contains('"base64":"') || tail != '"}') {
+            failClass = 'INVALID_RESPONSE'
+            detail = 'base64 image missing or truncated (' + body.length + ' bytes)'
+        }
+    }
+}
+
+if (failClass == null) {
+    String expected = (vars.get('EXPECTED_MESSAGE') ?: '').trim()
+    if (baseline) {
+        props.put('VP_BASELINE_VERDICT', verdict)
+        props.put('VP_BASELINE_MD5', MessageDigest.getInstance('MD5').digest(body).encodeHex().toString())
+        props.put('VP_BASELINE_BYTES', String.valueOf(body.length))
+        if (expected &amp;&amp; expected != verdict) {
+            failClass = 'VERDICT_MISMATCH'
+            detail = 'baseline verdict ' + verdict + ' but EXPECTED_MESSAGE=' + expected
+        }
+    } else {
+        if (!expected) expected = props.get('VP_BASELINE_VERDICT') ?: ''
+        if (expected &amp;&amp; verdict != expected) {
+            failClass = 'VERDICT_MISMATCH'
+            detail = 'verdict ' + verdict + ', expected ' + expected
+        } else if (vars.get('STRICT_BODY_MATCH') == 'true' &amp;&amp; props.get('VP_BASELINE_MD5')) {
+            String md5 = MessageDigest.getInstance('MD5').digest(body).encodeHex().toString()
+            if (md5 != props.get('VP_BASELINE_MD5')) {
+                failClass = 'BODY_MISMATCH'
+                detail = body.length + ' bytes (baseline ' + props.get('VP_BASELINE_BYTES') + '), MD5 differs from the baseline response'
+            }
+        }
+    }
+}
+
+vars.put('VERDICT', verdict)
+vars.put('FAIL_CLASS', failClass ?: '')
+if (failClass != null) {
+    AssertionResult.setFailure(true)
+    AssertionResult.setFailureMessage(failClass + ': ' + detail.take(300))
+}
+</stringProp>
+</JSR223Assertion>
+<hashTree>
+</hashTree>
+<SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp - configuration, license and baseline">
+<stringProp name="TestPlan.comments">Runs once before the load. Any failure stops the test before load starts.</stringProp>
+<stringProp name="ThreadGroup.on_sample_error">stoptestnow</stringProp>
+<elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+<boolProp name="LoopController.continue_forever">false</boolProp>
+<intProp name="LoopController.loops">1</intProp>
+</elementProp>
+<stringProp name="ThreadGroup.num_threads">1</stringProp>
+<stringProp name="ThreadGroup.ramp_time">0</stringProp>
+<boolProp name="ThreadGroup.scheduler">false</boolProp>
+<stringProp name="ThreadGroup.duration"></stringProp>
+<stringProp name="ThreadGroup.delay"></stringProp>
+<boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+<boolProp name="ThreadGroup.delayedStart">false</boolProp>
+</SetupThreadGroup>
+<hashTree>
+<JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="setUp_validate_configuration">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Validates the settings and the image, then prepares the state shared by the load threads:
+// the arrival schedule, the safety counters and the stop flag. A problem fails this sample,
+// which stops the test before any load is sent.
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+import org.apache.jmeter.services.FileServer
+
+def problems = []
+def number = { String name -&gt;
+    String raw = (vars.get(name) ?: '').trim()
+    if (!raw.isNumber()) {
+        problems.add(name + ' must be a number, got [' + raw + ']')
+        return 0d
+    }
+    return raw as double
+}
+
+double target = number('TARGET_TPS')
+double rampStart = number('RAMP_START_TPS')
+double rampSeconds = number('RAMP_UP_SECONDS')
+double sustainSeconds = number('SUSTAIN_SECONDS')
+double maxInFlight = number('MAX_IN_FLIGHT')
+double hardMax = number('HARD_MAX_SECONDS')
+if (target &lt;= 0) problems.add('TARGET_TPS must be above 0')
+if (rampStart &lt; 0 || rampStart &gt; target) problems.add('RAMP_START_TPS must be between 0 and TARGET_TPS')
+if (rampSeconds &lt; 0) problems.add('RAMP_UP_SECONDS must be 0 or more')
+if (sustainSeconds &lt;= 0) problems.add('SUSTAIN_SECONDS must be above 0')
+if (hardMax &lt; rampSeconds + sustainSeconds + 30) problems.add('HARD_MAX_SECONDS must be at least RAMP_UP_SECONDS + SUSTAIN_SECONDS + 30')
+if (maxInFlight &lt; target) problems.add('MAX_IN_FLIGHT must be at least TARGET_TPS')
+if (rampSeconds == 0 &amp;&amp; rampStart != target) rampStart = target
+
+File image = FileServer.getFileServer().getResolvedFile(vars.get('IMAGE_PATH'))
+if (!image.isFile()) problems.add('IMAGE_PATH not found: ' + image.getAbsolutePath())
+
+def limits = [
+    errorPct      : number('ERROR_RATE_PERCENT'),
+    window        : (long) number('ERROR_WINDOW'),
+    minSamples    : (long) number('ERROR_MIN_SAMPLES'),
+    maxConsecFail : (long) number('MAX_CONSECUTIVE_FAILURES'),
+    maxTimeouts   : (long) number('MAX_TIMEOUTS_IN_WINDOW'),
+    slowMs        : (long) number('SLOW_RESPONSE_MS'),
+    maxConsecSlow : (long) number('MAX_CONSECUTIVE_SLOW'),
+    maxLagMs      : (long) number('MAX_SCHEDULE_LAG_MS'),
+    maxBadVerdicts: (long) number('MAX_BAD_VERDICTS')
+]
+if (limits.window &lt; 1) problems.add('ERROR_WINDOW must be at least 1')
+
+if (problems) {
+    String text = problems.join('; ')
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode('500')
+    SampleResult.setResponseMessage(text)
+    SampleResult.setResponseData(text, 'UTF-8')
+    OUT.println('[setUp] CONFIGURATION PROBLEM: ' + text)
+    return
+}
+
+// Cumulative arrivals of a linear ramp from r0 to r1 over R seconds: (r0 + r1) / 2 * R.
+double rampArrivals = (rampStart + target) / 2d * rampSeconds
+long totalSlots = (long) Math.floor(rampArrivals + target * sustainSeconds)
+props.put('VP_PLAN', [r0: rampStart, r1: target, ramp: rampSeconds, sustain: sustainSeconds,
+                      rampArrivals: rampArrivals, totalSlots: totalSlots])
+props.put('VP_LIMITS', limits)
+props.put('VP_START_MS', new AtomicLong(0L))
+props.put('VP_SLOT', new AtomicLong(0L))
+props.put('VP_STOPPING', new AtomicBoolean(false))
+props.put('VP_STOP_REASON', '')
+props.put('VP_STOP_CHECKED_MS', new AtomicLong(0L))
+// state: 0 completed, 1 consecutive failures, 2 consecutive slow, 3 failures in window,
+//        4 timeouts in window, 5 invalid or inconsistent verdicts in the run
+props.put('VP_SAFETY', [failed: new int[(int) limits.window], timedOut: new int[(int) limits.window], state: new long[6]])
+
+String info = String.format(Locale.ROOT,
+    'ramp %.1f to %.1f TPS over %.0f s, then %.1f TPS for %.0f s: %d requests, at most %.0f in flight. Image %s (%d bytes)',
+    rampStart, target, rampSeconds, target, sustainSeconds, totalSlots, maxInFlight, image.getAbsolutePath(), image.length())
+OUT.println('[setUp] Plan: ' + info)
+SampleResult.setResponseData(info, 'UTF-8')
+</stringProp>
+</JSR223Sampler>
+<hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="checkLicense_preflight">
+<elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+<collectionProp name="Arguments.arguments"/>
+</elementProp>
+<stringProp name="HTTPSampler.path">${LICENSE_CHECK_PATH}</stringProp>
+<stringProp name="HTTPSampler.method">GET</stringProp>
+<boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+<boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+<boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+<boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+</HTTPSamplerProxy>
+<hashTree>
+<JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Face license engine is valid">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// verifyPhoto needs the face (IFace) engine. The API loads the license once at startup and
+// answers every verifyPhoto request with HTTP 400 when it is not valid.
+import groovy.json.JsonSlurper
+
+String problem = null
+try {
+    def status = new JsonSlurper().parseText(prev.getResponseDataAsString())
+    if (status?.face?.valid != true)
+        problem = 'face license not valid: ' + (status?.face?.error ?: status?.message ?: 'no detail')
+} catch (e) {
+    problem = 'checkLicense did not return license JSON (HTTP ' + prev.getResponseCode() + '): ' + e.message
+}
+if (problem) {
+    AssertionResult.setFailure(true)
+    AssertionResult.setFailureMessage(problem)
+    OUT.println('[setUp] ' + problem)
+}
+</stringProp>
+</JSR223Assertion>
+<hashTree>
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="verifyPhoto_baseline">
+<stringProp name="TestPlan.comments">One request before the load. Its verdict and body become the expected result of every load request.</stringProp>
+<elementProp name="HTTPsampler.Files" elementType="HTTPFileArgs">
+<collectionProp name="HTTPFileArgs.files">
+<elementProp name="${IMAGE_PATH}" elementType="HTTPFileArg">
+<stringProp name="File.path">${IMAGE_PATH}</stringProp>
+<stringProp name="File.paramname">${UPLOAD_FIELD_NAME}</stringProp>
+<stringProp name="File.mimetype">${IMAGE_MIME_TYPE}</stringProp>
+</elementProp>
+</collectionProp>
+</elementProp>
+<elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+<collectionProp name="Arguments.arguments"/>
+</elementProp>
+<stringProp name="HTTPSampler.path">${API_PATH}</stringProp>
+<stringProp name="HTTPSampler.method">POST</stringProp>
+<boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+<boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+<boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+<boolProp name="HTTPSampler.DO_MULTIPART_POST">true</boolProp>
+<boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">true</boolProp>
+</HTTPSamplerProxy>
+<hashTree>
+<JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Print the baseline">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Runs before the assertion, so this shows what the API returned, not the verdict check.
+String head = new String(prev.getResponseData(), 0, Math.min(prev.getResponseData().length, 120), 'UTF-8')
+OUT.println('[setUp] Baseline: HTTP ' + prev.getResponseCode() + ', ' + prev.getBytesAsLong() + ' bytes, ' + prev.getTime() + ' ms: ' + head)
+</stringProp>
+</JSR223PostProcessor>
+<hashTree>
+</hashTree>
+</hashTree>
+</hashTree>
+<ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Load - verifyPhoto on the arrival schedule">
+<stringProp name="TestPlan.comments">The thread count only caps requests in flight; the arrival scheduler decides when each request is sent.</stringProp>
+<stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+<elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+<boolProp name="LoopController.continue_forever">false</boolProp>
+<intProp name="LoopController.loops">-1</intProp>
+</elementProp>
+<stringProp name="ThreadGroup.num_threads">${MAX_IN_FLIGHT}</stringProp>
+<stringProp name="ThreadGroup.ramp_time">0</stringProp>
+<boolProp name="ThreadGroup.scheduler">true</boolProp>
+<stringProp name="ThreadGroup.duration">${HARD_MAX_SECONDS}</stringProp>
+<stringProp name="ThreadGroup.delay"></stringProp>
+<boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+<boolProp name="ThreadGroup.delayedStart">false</boolProp>
+</ThreadGroup>
+<hashTree>
+<TestAction guiclass="TestActionGui" testclass="TestAction" testname="Pacer - wait for the next arrival slot">
+<stringProp name="TestPlan.comments">Pauses 0 ms itself; its timer does the waiting. Records no sample.</stringProp>
+<intProp name="ActionProcessor.action">1</intProp>
+<intProp name="ActionProcessor.target">0</intProp>
+<stringProp name="ActionProcessor.duration">0</stringProp>
+</TestAction>
+<hashTree>
+<JSR223Timer guiclass="TestBeanGUI" testclass="JSR223Timer" testname="Arrival scheduler (open model, shared by all threads)">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Request n is due when the rate profile has produced n arrivals: a linear ramp from
+// RAMP_START_TPS to TARGET_TPS over RAMP_UP_SECONDS, then TARGET_TPS for SUSTAIN_SECONDS.
+// Each thread takes the next request number, sleeps until it is due and sends it, so the
+// offered rate does not depend on how fast the API answers. When every thread is still
+// waiting on the API the next request goes out late; that delay is saved as LAG_MS, and a
+// delay above MAX_SCHEDULE_LAG_MS stops the test because the API is not keeping up.
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+
+Map plan = (Map) props.get('VP_PLAN')
+AtomicBoolean stopping = (AtomicBoolean) props.get('VP_STOPPING')
+if (plan == null || stopping == null) {
+    log.error('Schedule not initialised: run the whole test plan so the setUp group runs first')
+    vars.put('SEND', 'false')
+    vars.put('DONE', 'true')
+    return 0
+}
+long now = System.currentTimeMillis()
+AtomicLong startRef = (AtomicLong) props.get('VP_START_MS')
+startRef.compareAndSet(0L, now + 1000L)
+long start = startRef.get()
+long slot = ((AtomicLong) props.get('VP_SLOT')).getAndIncrement()
+if (stopping.get() || slot &gt;= (long) plan.totalSlots) {
+    vars.put('SEND', 'false')
+    vars.put('DONE', 'true')
+    return 0
+}
+
+double r0 = plan.r0
+double r1 = plan.r1
+double ramp = plan.ramp
+double rampArrivals = plan.rampArrivals
+double t
+if (slot &lt; rampArrivals) {
+    double k = (r1 - r0) / ramp
+    t = k == 0d ? slot / r0 : (-r0 + Math.sqrt(r0 * r0 + 2d * k * slot)) / k
+} else {
+    t = ramp + (slot - rampArrivals) / r1
+}
+boolean inRamp = t &lt; ramp
+long due = start + Math.round(t * 1000d)
+long lag = Math.max(0L, now - due)
+vars.put('SEND', 'true')
+vars.put('DONE', 'false')
+vars.put('PHASE', inRamp ? 'ramp' : 'sustain')
+vars.put('TARGET_TPS_NOW', String.format(Locale.ROOT, '%.2f', inRamp ? r0 + (r1 - r0) * t / ramp : r1))
+vars.put('DUE_MS', String.valueOf(due))
+vars.put('LAG_MS', String.valueOf(lag))
+
+Map limits = (Map) props.get('VP_LIMITS')
+if (lag &gt; (long) limits.maxLagMs &amp;&amp; stopping.compareAndSet(false, true)) {
+    String reason = 'SAFETY STOP (schedule lag): request ' + slot + ' would go out ' + lag + ' ms late (MAX_SCHEDULE_LAG_MS=' +
+        limits.maxLagMs + '); every load thread is still waiting on the API'
+    props.put('VP_STOP_REASON', reason)
+    log.error(reason)
+    OUT.println(reason + ' - letting requests in flight finish')
+    String dir = vars.get('RESULTS_DIR')
+    if (dir) new File(dir, 'stop-reason.txt').append(new java.text.SimpleDateFormat('yyyy-MM-dd HH:mm:ss').format(new Date()) + '  ' + reason + System.lineSeparator())
+    ctx.getEngine().askThreadsToStop()
+    vars.put('SEND', 'false')
+    vars.put('DONE', 'true')
+    return 0
+}
+return Math.max(0L, due - now)
+</stringProp>
+</JSR223Timer>
+<hashTree>
+</hashTree>
+</hashTree>
+<IfController guiclass="IfControllerPanel" testclass="IfController" testname="If a slot was granted">
+<stringProp name="IfController.condition">${SEND}</stringProp>
+<boolProp name="IfController.evaluateAll">false</boolProp>
+<boolProp name="IfController.useExpression">true</boolProp>
+</IfController>
+<hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="verifyPhoto">
+<stringProp name="TestPlan.comments">Relabelled verifyPhoto_ramp or verifyPhoto_sustain by its post-processor.</stringProp>
+<elementProp name="HTTPsampler.Files" elementType="HTTPFileArgs">
+<collectionProp name="HTTPFileArgs.files">
+<elementProp name="${IMAGE_PATH}" elementType="HTTPFileArg">
+<stringProp name="File.path">${IMAGE_PATH}</stringProp>
+<stringProp name="File.paramname">${UPLOAD_FIELD_NAME}</stringProp>
+<stringProp name="File.mimetype">${IMAGE_MIME_TYPE}</stringProp>
+</elementProp>
+</collectionProp>
+</elementProp>
+<elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+<collectionProp name="Arguments.arguments"/>
+</elementProp>
+<stringProp name="HTTPSampler.path">${API_PATH}</stringProp>
+<stringProp name="HTTPSampler.method">POST</stringProp>
+<boolProp name="HTTPSampler.follow_redirects">false</boolProp>
+<boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+<boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+<boolProp name="HTTPSampler.DO_MULTIPART_POST">true</boolProp>
+<boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">true</boolProp>
+</HTTPSamplerProxy>
+<hashTree>
+<JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Label by phase">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Separates ramp-up from sustained load in the results and the dashboard.
+prev.setSampleLabel('verifyPhoto_' + vars.get('PHASE'))
+</stringProp>
+</JSR223PostProcessor>
+<hashTree>
+</hashTree>
+</hashTree>
+</hashTree>
+<IfController guiclass="IfControllerPanel" testclass="IfController" testname="If the schedule is complete">
+<stringProp name="IfController.condition">${DONE}</stringProp>
+<boolProp name="IfController.evaluateAll">false</boolProp>
+<boolProp name="IfController.useExpression">true</boolProp>
+</IfController>
+<hashTree>
+<TestAction guiclass="TestActionGui" testclass="TestAction" testname="Stop this thread">
+<intProp name="ActionProcessor.action">0</intProp>
+<intProp name="ActionProcessor.target">0</intProp>
+<stringProp name="ActionProcessor.duration">0</stringProp>
+</TestAction>
+<hashTree>
+</hashTree>
+</hashTree>
+<JSR223Listener guiclass="TestBeanGUI" testclass="JSR223Listener" testname="Safety monitor (graceful automatic stop)">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Asks JMeter to stop gracefully (nothing new is sent; requests in flight finish or time out)
+// on the first of:
+//   - more than ERROR_RATE_PERCENT of the last ERROR_WINDOW requests failed (once
+//     ERROR_MIN_SAMPLES requests have completed)
+//   - MAX_CONSECUTIVE_FAILURES failed requests in a row (API down or refusing)
+//   - MAX_TIMEOUTS_IN_WINDOW timeouts within the last ERROR_WINDOW requests (API unresponsive)
+//   - MAX_CONSECUTIVE_SLOW responses in a row slower than SLOW_RESPONSE_MS (API stalling)
+//   - MAX_BAD_VERDICTS invalid or inconsistent verification results in the run
+//   - STOP_FILE exists (written by monitor-resources.ps1 on a CPU, memory, handle or process
+//     limit, or by stop-test.ps1); checked at most every 2 seconds
+// The schedule-lag stop lives in the arrival scheduler.
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+
+def result = sampleEvent.getResult()
+if (!result.getSampleLabel().startsWith('verifyPhoto_')) return
+AtomicBoolean stopping = (AtomicBoolean) props.get('VP_STOPPING')
+Map safety = (Map) props.get('VP_SAFETY')
+Map limits = (Map) props.get('VP_LIMITS')
+if (stopping == null || safety == null || stopping.get()) return
+
+String failClass = vars.get('FAIL_CLASS') ?: ''
+boolean failed = !result.isSuccessful()
+boolean timedOut = failClass == 'TIMEOUT'
+boolean badVerdict = failClass in ['INVALID_VERDICT', 'VERDICT_MISMATCH', 'BODY_MISMATCH', 'INVALID_RESPONSE']
+String reason = null
+synchronized (safety) {
+    int[] failedRing = (int[]) safety.failed
+    int[] timeoutRing = (int[]) safety.timedOut
+    long[] s = (long[]) safety.state
+    int i = (int) (s[0] % failedRing.length)
+    if (s[0] &gt;= failedRing.length) {
+        s[3] -= failedRing[i]
+        s[4] -= timeoutRing[i]
+    }
+    failedRing[i] = failed ? 1 : 0
+    timeoutRing[i] = timedOut ? 1 : 0
+    s[3] += failedRing[i]
+    s[4] += timeoutRing[i]
+    s[0]++
+    s[1] = failed ? s[1] + 1 : 0
+    s[2] = result.getTime() &gt; (long) limits.slowMs ? s[2] + 1 : 0
+    if (badVerdict) s[5]++
+
+    long filled = Math.min(s[0], (long) failedRing.length)
+    double failedPct = 100d * s[3] / filled
+    if (s[5] &gt;= (long) limits.maxBadVerdicts)
+        reason = 'verification results: ' + s[5] + ' invalid or inconsistent (MAX_BAD_VERDICTS=' + limits.maxBadVerdicts + '); last: ' + result.getFirstAssertionFailureMessage()
+    else if (s[1] &gt;= (long) limits.maxConsecFail)
+        reason = 'failures: ' + s[1] + ' in a row (MAX_CONSECUTIVE_FAILURES=' + limits.maxConsecFail + '); last: ' + result.getResponseCode() + ' ' + failClass
+    else if (s[4] &gt;= (long) limits.maxTimeouts)
+        reason = 'timeouts: ' + s[4] + ' in the last ' + filled + ' requests (MAX_TIMEOUTS_IN_WINDOW=' + limits.maxTimeouts + ')'
+    else if (filled &gt;= (long) limits.minSamples &amp;&amp; failedPct &gt; (double) limits.errorPct)
+        reason = String.format(Locale.ROOT, 'error rate: %.1f%% of the last %d requests failed (ERROR_RATE_PERCENT=%s)', failedPct, filled, limits.errorPct)
+    else if (s[2] &gt;= (long) limits.maxConsecSlow)
+        reason = 'slow responses: ' + s[2] + ' in a row over ' + limits.slowMs + ' ms (MAX_CONSECUTIVE_SLOW=' + limits.maxConsecSlow + ')'
+}
+
+if (reason == null) {
+    String stopFile = vars.get('STOP_FILE')
+    AtomicLong checked = (AtomicLong) props.get('VP_STOP_CHECKED_MS')
+    long now = System.currentTimeMillis()
+    long last = checked.get()
+    if (stopFile &amp;&amp; now - last &gt;= 2000L &amp;&amp; checked.compareAndSet(last, now)) {
+        File f = new File(stopFile)
+        if (f.isFile()) reason = 'stop file ' + f.getAbsolutePath() + ': ' + (f.getText('UTF-8').replace('﻿', '').trim() ?: 'no reason given')
+    }
+}
+
+if (reason != null &amp;&amp; stopping.compareAndSet(false, true)) {
+    reason = 'SAFETY STOP (' + reason + ')'
+    props.put('VP_STOP_REASON', reason)
+    log.error(reason)
+    OUT.println(reason + ' - letting requests in flight finish')
+    String dir = vars.get('RESULTS_DIR')
+    if (dir) new File(dir, 'stop-reason.txt').append(new java.text.SimpleDateFormat('yyyy-MM-dd HH:mm:ss').format(new Date()) + '  ' + reason + System.lineSeparator())
+    ctx.getEngine().askThreadsToStop()
+}
+</stringProp>
+</JSR223Listener>
+<hashTree>
+</hashTree>
+</hashTree>
+<PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown - record how the run ended">
+<stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+<elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+<boolProp name="LoopController.continue_forever">false</boolProp>
+<intProp name="LoopController.loops">1</intProp>
+</elementProp>
+<stringProp name="ThreadGroup.num_threads">1</stringProp>
+<stringProp name="ThreadGroup.ramp_time">0</stringProp>
+<boolProp name="ThreadGroup.scheduler">false</boolProp>
+<stringProp name="ThreadGroup.duration"></stringProp>
+<stringProp name="ThreadGroup.delay"></stringProp>
+<boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+<boolProp name="ThreadGroup.delayedStart">false</boolProp>
+</PostThreadGroup>
+<hashTree>
+<JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="tearDown_write_run_info">
+<stringProp name="scriptLanguage">groovy</stringProp>
+<stringProp name="parameters"></stringProp>
+<stringProp name="filename"></stringProp>
+<stringProp name="cacheKey">true</stringProp>
+<stringProp name="script">// Writes run-info.properties for the summary script: the plan, the baseline and why the run ended.
+import java.util.concurrent.atomic.AtomicLong
+
+Map plan = (Map) props.get('VP_PLAN') ?: [:]
+def planValue = { String key -&gt; plan[key] == null ? '' : String.valueOf(plan[key]) }
+AtomicLong start = (AtomicLong) props.get('VP_START_MS')
+String reason = props.get('VP_STOP_REASON') ?: ''
+Properties info = new Properties()
+info.setProperty('schedule_start_ms', String.valueOf(start == null ? 0L : start.get()))
+info.setProperty('ramp_start_tps', planValue('r0'))
+info.setProperty('target_tps', planValue('r1'))
+info.setProperty('ramp_up_seconds', planValue('ramp'))
+info.setProperty('sustain_seconds', planValue('sustain'))
+info.setProperty('planned_requests', planValue('totalSlots'))
+info.setProperty('max_in_flight', vars.get('MAX_IN_FLIGHT') ?: '')
+info.setProperty('target', vars.get('PROTOCOL') + '://' + vars.get('API_HOST') + ':' + vars.get('API_PORT') + vars.get('API_PATH'))
+info.setProperty('image_path', vars.get('IMAGE_PATH') ?: '')
+info.setProperty('baseline_verdict', props.get('VP_BASELINE_VERDICT') ?: '')
+info.setProperty('baseline_md5', props.get('VP_BASELINE_MD5') ?: '')
+info.setProperty('baseline_bytes', props.get('VP_BASELINE_BYTES') ?: '')
+info.setProperty('strict_body_match', vars.get('STRICT_BODY_MATCH') ?: '')
+info.setProperty('stop_reason', reason ?: 'none: the schedule completed')
+info.setProperty('end_ms', String.valueOf(System.currentTimeMillis()))
+String dir = vars.get('RESULTS_DIR')
+if (dir) new File(dir, 'run-info.properties').withOutputStream { info.store(it, 'verifyPhoto stress test') }
+OUT.println('[tearDown] ' + (reason ?: 'Schedule completed without a safety stop'))
+SampleResult.setResponseData(info.toString(), 'UTF-8')
+</stringProp>
+</JSR223Sampler>
+<hashTree>
+</hashTree>
+</hashTree>
+<ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree (GUI debugging only - keep disabled for load)" enabled="false">
+<boolProp name="ResultCollector.error_logging">false</boolProp>
+<objProp>
+<name>saveConfig</name>
+<value class="SampleSaveConfiguration">
+<time>true</time>
+<latency>true</latency>
+<timestamp>true</timestamp>
+<success>true</success>
+<label>true</label>
+<code>true</code>
+<message>true</message>
+<threadName>true</threadName>
+<dataType>true</dataType>
+<encoding>false</encoding>
+<assertions>true</assertions>
+<subresults>true</subresults>
+<responseData>false</responseData>
+<samplerData>false</samplerData>
+<xml>false</xml>
+<fieldNames>true</fieldNames>
+<responseHeaders>false</responseHeaders>
+<requestHeaders>false</requestHeaders>
+<responseDataOnError>false</responseDataOnError>
+<saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+<assertionsResultsToSave>0</assertionsResultsToSave>
+<bytes>true</bytes>
+<sentBytes>true</sentBytes>
+<url>true</url>
+<threadCounts>true</threadCounts>
+<idleTime>true</idleTime>
+<connectTime>true</connectTime>
+</value>
+</objProp>
+<stringProp name="filename"></stringProp>
+</ResultCollector>
+<hashTree>
+</hashTree>
+</hashTree>
+</hashTree>
+</jmeterTestPlan>
